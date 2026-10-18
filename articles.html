@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Health Library & Articles — Medical Insights</title>
+  <meta name="description"
+    content="Browse evidence-based medical articles on cancer, cardiology, diabetes, respiratory illness, and preventative medicine.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Instrument+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+  <main id="main">
+    <!-- Hero Header matching index.html -->
+    <section class="hero" style="padding: 72px 0 64px;">
+      <div class="wrap">
+        <div>
+          <nav class="breadcrumbs" aria-label="Breadcrumb" style="margin-bottom:16px;">
+            <a href="index.html">Home</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Articles</span>
+          </nav>
+          <h1>Medical Library & Education</h1>
+          <p class="lede">
+            Evidence-based clinical education on cancer, cardiometabolic disease, and prevention, written by a practising doctor.
+          </p>
+
+          <!-- Search form matching index.html EXACTLY -->
+          <form class="search" id="hero-search" role="search" style="margin-top:32px;">
+            <label for="q" class="skip" style="position:absolute">Search articles</label>
+            <input id="q" name="q" type="search" placeholder="Search articles, e.g. blood pressure, staging, diabetes" autocomplete="off">
+            <button class="btn" type="submit">Search</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Articles Section with Category Navigation -->
+    <section class="section wrap" style="padding-top:48px; padding-bottom:88px;">
+      <div class="section-head" style="margin-bottom:24px; align-items:center;">
+        <div>
+          <h2>Browse Articles by Topic</h2>
+          <p class="meta" id="results-count" style="margin-top:6px; font-size:0.95rem;">Loading articles…</p>
+        </div>
+        <div id="clear-wrap" style="display:none;">
+          <button class="btn ghost btn-sm" id="btn-reset-filters">Clear search & filters</button>
+        </div>
+      </div>
+
+      <!-- Topic Navigation Pills -->
+      <nav class="topic-nav" id="topic-nav" aria-label="Article categories navigation">
+        <button class="topic-pill active" data-category="all" type="button">
+          <i data-lucide="layout-grid" class="i"></i>
+          <span>All Topics</span>
+          <span class="topic-count" id="count-all">0</span>
+        </button>
+      </nav>
+
+      <!-- Active Filter Banner (shown when a filter or search is active) -->
+      <div class="active-filter-bar" id="active-filter-bar" style="display:none;">
+        <i data-lucide="filter" class="i" style="color:var(--teal-700)"></i>
+        <span>Filtered by:</span>
+        <span class="active-filter-chip" id="active-chip"></span>
+        <button class="btn-clear-filters" id="btn-chip-reset">Reset</button>
+      </div>
+
+      <!-- Articles Grid -->
+      <div class="grid" id="articles-grid" style="margin-top:32px;">
+        <div class="state">Loading library…</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { supabase, renderChrome, cardHTML, esc, icon, configured, state, cols } from './main.js';
+
+    let allArticles = [];
+    let categories = [];
+    let currentCategory = 'all';
+    let searchQuery = '';
+
+    const grid = document.getElementById('articles-grid');
+    const topicNav = document.getElementById('topic-nav');
+    const countEl = document.getElementById('results-count');
+    const searchForm = document.getElementById('hero-search');
+    const searchInput = document.getElementById('q');
+    const clearWrap = document.getElementById('clear-wrap');
+    const resetFiltersBtn = document.getElementById('btn-reset-filters');
+    const activeFilterBar = document.getElementById('active-filter-bar');
+    const activeChip = document.getElementById('active-chip');
+    const chipResetBtn = document.getElementById('btn-chip-reset');
+
+    // Parse URL params (?q=... or ?c=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('q')) {
+      searchQuery = urlParams.get('q');
+      searchInput.value = searchQuery;
+    }
+    if (urlParams.get('c')) {
+      currentCategory = urlParams.get('c');
+    }
+
+    async function init() {
+      if (!configured) {
+        grid.innerHTML = state('Supabase credentials are not configured.');
+        return;
+      }
+
+      try {
+        // Load categories and articles concurrently
+        const [catsRes, articlesRes] = await Promise.all([
+          supabase.from('categories').select('id,name,slug,icon').order('sort_order'),
+          supabase.from('articles')
+            .select(cols)
+            .eq('status', 'published')
+            .order('published_at', { ascending: false })
+        ]);
+
+        if (catsRes.error) throw catsRes.error;
+        if (articlesRes.error) throw articlesRes.error;
+
+        categories = catsRes.data || [];
+        allArticles = articlesRes.data || [];
+
+        // Count for "All Topics"
+        document.getElementById('count-all').textContent = allArticles.length;
+
+        // Build category filter pills with icons & counts
+        categories.forEach(cat => {
+          const count = allArticles.filter(a => a.categories && a.categories.slug === cat.slug).length;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `topic-pill ${currentCategory === cat.slug ? 'active' : ''}`;
+          btn.dataset.category = cat.slug;
+          btn.innerHTML = `
+            ${icon(cat.icon || 'folder')}
+            <span>${esc(cat.name)}</span>
+            <span class="topic-count">${count}</span>
+          `;
+          btn.addEventListener('click', () => {
+            selectCategory(cat.slug);
+          });
+          topicNav.appendChild(btn);
+        });
+
+        // "All Topics" listener
+        const allBtn = topicNav.querySelector('[data-category="all"]');
+        if (currentCategory !== 'all') {
+          allBtn.classList.remove('active');
+        }
+        allBtn.addEventListener('click', () => {
+          selectCategory('all');
+        });
+
+        render();
+      } catch (err) {
+        console.error(err);
+        grid.innerHTML = state('Failed to load articles. Please refresh to try again.');
+        countEl.textContent = '';
+      }
+      window.lucide?.createIcons();
+    }
+
+    function selectCategory(catSlug) {
+      currentCategory = catSlug;
+      document.querySelectorAll('.topic-nav .topic-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.category === catSlug);
+      });
+      render();
+    }
+
+    function render() {
+      const q = searchQuery.toLowerCase().trim();
+      const filtered = allArticles.filter(art => {
+        const matchesCategory = currentCategory === 'all' || (art.categories && art.categories.slug === currentCategory);
+        const matchesQuery = !q ||
+          art.title.toLowerCase().includes(q) ||
+          art.summary.toLowerCase().includes(q);
+        return matchesCategory && matchesQuery;
+      });
+
+      // Update counter
+      countEl.innerHTML = `Showing <strong>${filtered.length}</strong> ${filtered.length === 1 ? 'article' : 'articles'}`;
+
+      // Manage active filter banner & reset buttons
+      const hasFilter = currentCategory !== 'all' || q !== '';
+      if (hasFilter) {
+        activeFilterBar.style.display = 'flex';
+        clearWrap.style.display = 'block';
+        let labels = [];
+        if (currentCategory !== 'all') {
+          const catObj = categories.find(c => c.slug === currentCategory);
+          labels.push(`Topic: ${catObj ? catObj.name : currentCategory}`);
+        }
+        if (q) {
+          labels.push(`Search: "${esc(searchQuery)}"`);
+        }
+        activeChip.textContent = labels.join(' · ');
+      } else {
+        activeFilterBar.style.display = 'none';
+        clearWrap.style.display = 'none';
+      }
+
+      // Render cards or empty state
+      if (!filtered.length) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><i data-lucide="search-x" class="i" style="width:28px;height:28px;"></i></div>
+            <h3>No articles found</h3>
+            <p>No articles matched your current search or topic filter. Try another keyword or reset your filters.</p>
+            <button class="btn ghost" id="empty-reset-btn">Reset All Filters</button>
+          </div>
+        `;
+        document.getElementById('empty-reset-btn')?.addEventListener('click', resetAllFilters);
+        window.lucide?.createIcons();
+        return;
+      }
+
+      grid.innerHTML = filtered.map(a => cardHTML(a)).join('');
+      window.lucide?.createIcons();
+    }
+
+    function resetAllFilters() {
+      searchQuery = '';
+      searchInput.value = '';
+      selectCategory('all');
+    }
+
+    searchForm.addEventListener('submit', e => {
+      e.preventDefault();
+      searchQuery = searchInput.value;
+      render();
+    });
+
+    searchInput.addEventListener('input', e => {
+      searchQuery = e.target.value;
+      render();
+    });
+
+    resetFiltersBtn?.addEventListener('click', resetAllFilters);
+    chipResetBtn?.addEventListener('click', resetAllFilters);
+
+    init();
+  </script>
+</body>
+
+</html>

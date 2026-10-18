@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Topic — Medical Insights</title>
+  <meta name="description" content="Explore evidence-based health articles by category.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Instrument+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+  <main id="main">
+    <div id="category-app">
+      <div class="wrap" style="padding:60px 24px;">
+        <div class="state">Loading category…</div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase, renderChrome, cardHTML, esc, icon, configured, state, cols } from './main.js';
+
+    const container = document.getElementById('category-app');
+    const slug = new URLSearchParams(window.location.search).get('c') || 'oncology';
+
+    async function loadCategory() {
+      if (!configured) {
+        container.innerHTML = `<div class="wrap" style="padding:60px 24px;">${state('Supabase credentials are not configured.')}</div>`;
+        return;
+      }
+
+      try {
+        // Fetch category details, all categories (for quick switcher), and articles in this category
+        const [catRes, allCatsRes, articlesRes] = await Promise.all([
+          supabase.from('categories').select('id,name,slug,description,icon').eq('slug', slug).single(),
+          supabase.from('categories').select('name,slug,icon').order('sort_order'),
+          supabase.from('articles')
+            .select(cols.replace('categories(', 'categories!inner('))
+            .eq('status', 'published')
+            .eq('categories.slug', slug)
+            .order('published_at', { ascending: false })
+        ]);
+
+        if (catRes.error || !catRes.data) {
+          container.innerHTML = `
+            <div class="wrap" style="padding:80px 24px; text-align:center;">
+              <h2>Topic Not Found</h2>
+              <p class="lede" style="margin:16px auto 32px;">The medical topic you are looking for does not exist.</p>
+              <a class="btn" href="articles.html">Browse All Topics</a>
+            </div>`;
+          window.lucide?.createIcons();
+          return;
+        }
+
+        const cat = catRes.data;
+        const allCats = allCatsRes.data || [];
+        const articles = articlesRes.data || [];
+
+        document.title = `${cat.name} — Medical Insights`;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc && cat.description) metaDesc.setAttribute('content', cat.description);
+
+        container.innerHTML = `
+          <header class="page-head">
+            <div class="wrap">
+              <nav class="breadcrumbs" aria-label="Breadcrumb">
+                <a href="index.html">Home</a>
+                <span aria-hidden="true">/</span>
+                <a href="articles.html">Topics</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">${esc(cat.name)}</span>
+              </nav>
+
+              <div style="display:flex; align-items:center; gap:16px; margin-bottom:12px;">
+                <div style="background:var(--sage-200); color:var(--teal-700); width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                  ${icon(cat.icon || 'folder')}
+                </div>
+                <h1>${esc(cat.name)}</h1>
+              </div>
+
+              <p class="lede">${esc(cat.description || 'Clinical guidance, research, and preventive education.')}</p>
+
+              <div class="filter-pills" style="margin-top:28px;">
+                ${allCats.map(c => `
+                  <a class="pill ${c.slug === slug ? 'active' : ''}" href="category.html?c=${c.slug}">
+                    ${esc(c.name)}
+                  </a>
+                `).join('')}
+              </div>
+            </div>
+          </header>
+
+          <section class="section wrap" style="padding-top:48px; padding-bottom:88px;">
+            <div class="section-head">
+              <h2>${articles.length} ${articles.length === 1 ? 'Article' : 'Articles'} in ${esc(cat.name)}</h2>
+              <a class="link" href="articles.html">View full library</a>
+            </div>
+
+            <div class="grid">
+              ${articles.length
+                ? articles.map(a => cardHTML(a)).join('')
+                : state(`No articles have been published in ${esc(cat.name)} yet. Check back soon!`)}
+            </div>
+          </section>
+        `;
+        window.lucide?.createIcons();
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="wrap" style="padding:60px 24px;">${state('Error loading category data. Please refresh to try again.')}</div>`;
+      }
+    }
+
+    loadCategory();
+  </script>
+</body>
+
+</html>

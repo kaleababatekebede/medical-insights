@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Dashboard — Medical Insights</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Instrument+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+  <main id="main">
+    <div id="admin-app">
+      <div class="wrap" style="padding:60px 24px;">
+        <div class="state">Checking credentials…</div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase, renderChrome, esc, fmtDate, icon, SITE, configured } from './main.js';
+
+    const container = document.getElementById('admin-app');
+    let currentUser = null;
+    let isAdmin = false;
+    let activeTab = 'articles';
+    let editingArticle = null;
+    let categoriesList = [];
+
+    async function checkAuth() {
+      if (!configured) {
+        container.innerHTML = `<div class="wrap" style="padding:60px 24px;"><div class="notice notice-warning">Supabase credentials are not configured in supabase.js.</div></div>`;
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        renderLoginForm();
+        return;
+      }
+
+      currentUser = session.user;
+
+      // Verify admin status in public.admins
+      try {
+        const { data, error } = await supabase.from('admins').select('user_id').eq('user_id', currentUser.id).single();
+        if (error || !data) {
+          renderNotAdmin();
+          return;
+        }
+        isAdmin = true;
+
+        // Fetch categories for editor
+        const catRes = await supabase.from('categories').select('id,name,slug').order('sort_order');
+        categoriesList = catRes.data || [];
+
+        renderDashboard();
+      } catch (err) {
+        console.error(err);
+        renderNotAdmin();
+      }
+    }
+
+    function renderLoginForm(errorMsg = '') {
+      container.innerHTML = `
+        <div class="wrap" style="max-width:480px; padding:80px 24px;">
+          <div class="form-card">
+            <h1 style="font-size:2rem; margin-bottom:8px;">Admin Portal</h1>
+            <p style="color:var(--muted); margin-bottom:28px;">Sign in to create, edit, or publish articles.</p>
+
+            ${errorMsg ? `<div class="notice notice-error">${esc(errorMsg)}</div>` : ''}
+
+            <form id="login-form">
+              <div class="form-group">
+                <label for="admin-email">Email</label>
+                <input class="form-control" type="email" id="admin-email" required placeholder="admin@example.com">
+              </div>
+              <div class="form-group">
+                <label for="admin-password">Password</label>
+                <input class="form-control" type="password" id="admin-password" required placeholder="••••••••">
+              </div>
+              <button class="btn" type="submit" style="width:100%; justify-content:center; margin-top:12px;">
+                <span>Sign In</span>
+              </button>
+            </form>
+          </div>
+        </div>`;
+
+      document.getElementById('login-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const email = document.getElementById('admin-email').value.trim();
+        const password = document.getElementById('admin-password').value;
+        const btn = e.target.querySelector('button');
+        btn.disabled = true;
+        btn.textContent = 'Verifying…';
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          renderLoginForm(error.message);
+        } else {
+          checkAuth();
+        }
+      });
+      window.lucide?.createIcons();
+    }
+
+    function renderNotAdmin() {
+      container.innerHTML = `
+        <div class="wrap" style="max-width:540px; padding:80px 24px; text-align:center;">
+          <h2>Access Restricted</h2>
+          <p class="lede" style="margin:16px 0 24px;">You are signed in as <strong>${esc(currentUser.email)}</strong>, but this account is not registered in the <code>public.admins</code> table.</p>
+          <p style="color:var(--muted); margin-bottom:28px;">To grant access, run the insert query shown in README.md from your Supabase SQL editor.</p>
+          <button class="btn ghost" id="signout-btn">Sign Out</button>
+        </div>`;
+      document.getElementById('signout-btn').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        checkAuth();
+      });
+      window.lucide?.createIcons();
+    }
+
+    async function renderDashboard() {
+      container.innerHTML = `
+        <div class="wrap" style="padding-top:40px; padding-bottom:88px;">
+          <div class="admin-bar">
+            <div>
+              <strong>${esc(currentUser.email)}</strong>
+              <span class="badge badge-published" style="margin-left:8px;">Admin</span>
+            </div>
+            <div style="display:flex; gap:12px;">
+              <button class="btn btn-sm" id="btn-new-article">
+                <i data-lucide="plus" class="i"></i> New Article
+              </button>
+              <button class="btn btn-sm ghost" id="btn-logout" style="color:#fff; border-color:rgba(255,255,255,0.4);">
+                <i data-lucide="log-out" class="i"></i> Sign Out
+              </button>
+            </div>
+          </div>
+
+          <div class="admin-tabs">
+            <button class="admin-tab ${activeTab === 'articles' ? 'active' : ''}" data-tab="articles">
+              ${icon('file-text')} Articles
+            </button>
+            <button class="admin-tab ${activeTab === 'editor' ? 'active' : ''}" data-tab="editor">
+              ${icon('edit-3')} ${editingArticle ? 'Edit Article' : 'New Article'}
+            </button>
+            <button class="admin-tab ${activeTab === 'messages' ? 'active' : ''}" data-tab="messages">
+              ${icon('inbox')} Reader Messages
+            </button>
+          </div>
+
+          <div id="tab-content">
+            <div class="state">Loading…</div>
+          </div>
+        </div>`;
+
+      // Event listeners
+      document.getElementById('btn-logout').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        checkAuth();
+      });
+
+      document.getElementById('btn-new-article').addEventListener('click', () => {
+        editingArticle = null;
+        switchTab('editor');
+      });
+
+      document.querySelectorAll('.admin-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchTab(btn.dataset.tab);
+        });
+      });
+
+      loadTabContent();
+      window.lucide?.createIcons();
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.admin-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tab);
+      });
+      loadTabContent();
+    }
+
+    async function loadTabContent() {
+      const target = document.getElementById('tab-content');
+      if (!target) return;
+
+      if (activeTab === 'articles') {
+        target.innerHTML = `<div class="state">Fetching articles…</div>`;
+        const { data: articles, error } = await supabase
+          .from('articles')
+          .select('id,slug,title,status,is_featured,reading_minutes,published_at,categories(name)')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          target.innerHTML = `<div class="notice notice-error">Error: ${esc(error.message)}</div>`;
+          return;
+        }
+
+        if (!articles.length) {
+          target.innerHTML = `
+            <div class="state">
+              <p>No articles found yet.</p>
+              <button class="btn" style="margin-top:16px;" id="empty-new-btn">Write Your First Article</button>
+            </div>`;
+          document.getElementById('empty-new-btn')?.addEventListener('click', () => {
+            editingArticle = null;
+            switchTab('editor');
+          });
+          return;
+        }
+
+        target.innerHTML = `
+          <div style="overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Topic</th>
+                  <th>Status</th>
+                  <th>Published</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${articles.map(a => `
+                  <tr>
+                    <td>
+                      <strong>${esc(a.title)}</strong>
+                      ${a.is_featured ? '<span class="tag" style="margin-left:6px; font-size:0.75rem;">Featured</span>' : ''}
+                      <div style="font-size:0.82rem; color:var(--muted);">${esc(a.slug)}</div>
+                    </td>
+                    <td>${esc(a.categories?.name || 'Uncategorized')}</td>
+                    <td>
+                      <span class="badge badge-${a.status === 'published' ? 'published' : 'draft'}">
+                        ${esc(a.status)}
+                      </span>
+                    </td>
+                    <td style="font-size:0.88rem; color:var(--muted);">
+                      ${a.published_at ? fmtDate(a.published_at) : 'Draft'}
+                    </td>
+                    <td style="text-align:right; white-space:nowrap;">
+                      <a class="btn btn-sm ghost" href="article.html?slug=${encodeURIComponent(a.slug)}" target="_blank" title="View Article">${icon('external-link')}</a>
+                      <button class="btn btn-sm ghost edit-art-btn" data-id="${a.id}" title="Edit Article">${icon('edit-2')}</button>
+                      <button class="btn btn-sm btn-danger del-art-btn" data-id="${a.id}" data-title="${esc(a.title)}" title="Delete Article">${icon('trash-2')}</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`;
+
+        target.querySelectorAll('.edit-art-btn').forEach(b => {
+          b.addEventListener('click', async () => {
+            const id = b.dataset.id;
+            const { data } = await supabase.from('articles').select('*').eq('id', id).single();
+            if (data) {
+              editingArticle = data;
+              switchTab('editor');
+            }
+          });
+        });
+
+        target.querySelectorAll('.del-art-btn').forEach(b => {
+          b.addEventListener('click', async () => {
+            if (confirm(`Are you sure you want to delete "${b.dataset.title}"? This cannot be undone.`)) {
+              await supabase.from('articles').delete().eq('id', b.dataset.id);
+              loadTabContent();
+            }
+          });
+        });
+
+      } else if (activeTab === 'editor') {
+        renderEditor(target);
+      } else if (activeTab === 'messages') {
+        target.innerHTML = `<div class="state">Fetching messages…</div>`;
+        const { data: messages, error } = await supabase
+          .from('messages')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          target.innerHTML = `<div class="notice notice-error">Error: ${esc(error.message)}</div>`;
+          return;
+        }
+
+        if (!messages.length) {
+          target.innerHTML = `<div class="state">No messages received yet.</div>`;
+          return;
+        }
+
+        target.innerHTML = `
+          <div style="display:grid; gap:16px;">
+            ${messages.map(m => `
+              <div class="form-card" style="padding:24px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <h3 style="margin-bottom:2px;">${esc(m.name)}</h3>
+                    <a href="mailto:${esc(m.email)}" class="link" style="font-size:0.92rem;">${esc(m.email)}</a>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <span style="font-size:0.85rem; color:var(--muted);">${fmtDate(m.created_at)}</span>
+                    <button class="btn btn-sm btn-danger del-msg-btn" data-id="${m.id}">${icon('trash-2')}</button>
+                  </div>
+                </div>
+                <div style="background:var(--paper-2); padding:16px; border-radius:var(--r-sm); white-space:pre-wrap; font-size:0.95rem;">${esc(m.message)}</div>
+              </div>
+            `).join('')}
+          </div>`;
+
+        target.querySelectorAll('.del-msg-btn').forEach(b => {
+          b.addEventListener('click', async () => {
+            if (confirm('Delete this message?')) {
+              await supabase.from('messages').delete().eq('id', b.dataset.id);
+              loadTabContent();
+            }
+          });
+        });
+      }
+      window.lucide?.createIcons();
+    }
+
+    function renderEditor(target) {
+      const a = editingArticle || {
+        title: '',
+        slug: '',
+        category_id: categoriesList[0]?.id || '',
+        summary: '',
+        body: '',
+        cover_url: '',
+        cover_alt: '',
+        author_name: SITE.name || 'Medical Insights Physician',
+        reading_minutes: 5,
+        status: 'draft',
+        is_featured: false
+      };
+
+      target.innerHTML = `
+        <div class="form-card" style="max-width:880px;">
+          <h2 style="margin-bottom:24px;">${editingArticle ? 'Edit Article' : 'Compose New Article'}</h2>
+          <div id="editor-msg" style="display:none;"></div>
+
+          <form id="article-form">
+            <div class="form-group">
+              <label for="f-title">Article Title *</label>
+              <input class="form-control" type="text" id="f-title" required value="${esc(a.title)}" placeholder="e.g. Understanding Cancer Stages">
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+              <div class="form-group">
+                <label for="f-slug">URL Slug * (kebab-case)</label>
+                <input class="form-control" type="text" id="f-slug" required value="${esc(a.slug)}" placeholder="understanding-cancer-stages">
+              </div>
+
+              <div class="form-group">
+                <label for="f-category">Category Topic *</label>
+                <select class="form-control" id="f-category" required>
+                  ${categoriesList.map(c => `
+                    <option value="${c.id}" ${c.id === a.category_id ? 'selected' : ''}>${esc(c.name)}</option>
+                  `).join('')}
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="f-summary">Summary / Lead Paragraph * (Appears on cards & search previews)</label>
+              <textarea class="form-control" id="f-summary" required style="min-height:80px;">${esc(a.summary)}</textarea>
+            </div>
+
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:16px;">
+              <div class="form-group">
+                <label for="f-cover">Cover Image URL (Unsplash or Supabase Storage)</label>
+                <input class="form-control" type="url" id="f-cover" value="${esc(a.cover_url || '')}" placeholder="https://images.unsplash.com/...">
+              </div>
+              <div class="form-group">
+                <label for="f-cover-alt">Image Alt Description</label>
+                <input class="form-control" type="text" id="f-cover-alt" value="${esc(a.cover_alt || '')}" placeholder="Description of image">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="f-body">Article Body (Supports HTML formatting: &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;blockquote&gt;) *</label>
+              <textarea class="form-control" id="f-body" required style="min-height:280px; font-family:monospace; font-size:0.92rem;">${esc(a.body)}</textarea>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+              <div class="form-group">
+                <label for="f-author">Author Byline</label>
+                <input class="form-control" type="text" id="f-author" value="${esc(a.author_name)}">
+              </div>
+              <div class="form-group">
+                <label for="f-minutes">Reading Minutes</label>
+                <input class="form-control" type="number" id="f-minutes" min="1" value="${a.reading_minutes || 5}">
+              </div>
+              <div class="form-group">
+                <label for="f-status">Publication Status</label>
+                <select class="form-control" id="f-status">
+                  <option value="draft" ${a.status === 'draft' ? 'selected' : ''}>Draft</option>
+                  <option value="published" ${a.status === 'published' ? 'selected' : ''}>Published</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin:16px 0 28px;">
+              <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+                <input type="checkbox" id="f-featured" ${a.is_featured ? 'checked' : ''} style="width:18px; height:18px;">
+                <span>Feature this article prominently on Homepage</span>
+              </label>
+            </div>
+
+            <div style="display:flex; gap:16px; justify-content:flex-end;">
+              <button class="btn ghost" type="button" id="cancel-edit-btn">Cancel</button>
+              <button class="btn" type="submit">
+                ${icon('check')} Save Article
+              </button>
+            </div>
+          </form>
+        </div>`;
+
+      // Auto-generate slug from title if new
+      const titleInput = document.getElementById('f-title');
+      const slugInput = document.getElementById('f-slug');
+      if (!editingArticle) {
+        titleInput.addEventListener('input', () => {
+          slugInput.value = titleInput.value
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        });
+      }
+
+      document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+        editingArticle = null;
+        switchTab('articles');
+      });
+
+      document.getElementById('article-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const msgBox = document.getElementById('editor-msg');
+
+        const payload = {
+          title: titleInput.value.trim(),
+          slug: slugInput.value.trim(),
+          category_id: document.getElementById('f-category').value,
+          summary: document.getElementById('f-summary').value.trim(),
+          body: document.getElementById('f-body').value.trim(),
+          cover_url: document.getElementById('f-cover').value.trim() || null,
+          cover_alt: document.getElementById('f-cover-alt').value.trim() || null,
+          author_name: document.getElementById('f-author').value.trim(),
+          reading_minutes: parseInt(document.getElementById('f-minutes').value, 10) || 5,
+          status: document.getElementById('f-status').value,
+          is_featured: document.getElementById('f-featured').checked,
+          published_at: document.getElementById('f-status').value === 'published'
+            ? (editingArticle?.published_at || new Date().toISOString())
+            : null
+        };
+
+        try {
+          let err;
+          if (editingArticle) {
+            const res = await supabase.from('articles').update(payload).eq('id', editingArticle.id);
+            err = res.error;
+          } else {
+            const res = await supabase.from('articles').insert([payload]);
+            err = res.error;
+          }
+
+          if (err) throw err;
+
+          editingArticle = null;
+          switchTab('articles');
+        } catch (err) {
+          console.error(err);
+          msgBox.style.display = 'block';
+          msgBox.className = 'notice notice-error';
+          msgBox.textContent = `Save failed: ${err.message}`;
+        }
+      });
+      window.lucide?.createIcons();
+    }
+
+    checkAuth();
+  </script>
+</body>
+
+</html>

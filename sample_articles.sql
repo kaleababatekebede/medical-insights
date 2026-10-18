@@ -1,0 +1,228 @@
+-- Comprehensive Sample Articles for Medical Insights
+-- Run this in your Supabase Dashboard > SQL Editor to populate the site with sample articles, tags, and citations.
+
+-- 1. Insert/Update Articles
+insert into public.articles (
+  title, slug, summary, body, cover_url, cover_alt, category_id,
+  author_name, status, is_featured, reading_minutes, seo_title, seo_description, published_at
+) values
+(
+  'Understanding Cancer Stages: What Stage I through IV Really Means',
+  'understanding-cancer-stages',
+  'A clear, clinical breakdown of how oncologists determine stage, why staging guides treatment options, and what to ask your care team.',
+  '<h2>The Purpose of Staging</h2><p>When someone is diagnosed with cancer, staging is one of the very first clinical steps. Staging describes where the cancer is located, how large the primary tumor is, and whether abnormal cells have spread to nearby lymph nodes or other parts of the body.</p><p>Understanding staging helps patients and families participate actively in decisions regarding surgery, systemic therapy, and radiation.</p><h2>The TNM System</h2><p>Most solid tumors are categorized using the American Joint Committee on Cancer (AJCC) TNM classification:</p><ul><li><strong>T (Tumor):</strong> Measures the size and anatomical extent of the primary mass (T1 to T4).</li><li><strong>N (Nodes):</strong> Indicates whether cancer cells have traversed lymphatic channels to regional lymph nodes (N0 to N3).</li><li><strong>M (Metastasis):</strong> Identifies whether cancer has colonized distant organs such as the liver, lungs, brain, or bones (M0 or M1).</li></ul><h2>Stages at a Glance</h2><p><strong>Stage I:</strong> Early-stage malignancy strictly localized to its organ of origin. Curative intent with surgical resection or targeted radiation is highest.</p><p><strong>Stage II & III:</strong> Represents larger primary tumors or invasion into regional lymph nodes. Treatment regimens frequently employ multimodal approaches, combining neoadjuvant chemotherapy, surgery, and adjuvant radiation.</p><p><strong>Stage IV:</strong> Distant metastatic disease. In contemporary oncology, Stage IV care has transformed through targeted molecular inhibitors and immune checkpoint therapies, focusing on durable disease control, symptom preservation, and quality of life.</p>',
+  'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80',
+  'Doctor reviewing medical scans and oncology records',
+  (select id from public.categories where slug = 'oncology'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  true,
+  6,
+  'Understanding Cancer Stages: I to IV Explained',
+  'Learn how oncologists stage cancer and what TNM classification means for prognosis and treatment.',
+  now() - interval '1 day'
+),
+(
+  'Dense Breast Tissue and Cancer Risk: What Your Mammogram Report Means',
+  'breast-cancer-risk-factors-dense-breasts',
+  'Demystifying breast density categories A through D, why dense tissue masks small tumors, and when supplemental ultrasound or MRI is indicated.',
+  '<h2>Understanding Breast Density on Mammography</h2><p>Breast density is not determined by how your breasts feel during an exam; it is strictly a radiological evaluation of the ratio between glandular/fibrous tissue and fatty tissue on a screening mammogram.</p><h2>The Four BI-RADS Density Categories</h2><p>Radiologists classify tissue into four categories:</p><ul><li><strong>Category A:</strong> Almost entirely fatty tissue (low density).</li><li><strong>Category B:</strong> Scattered areas of fibroglandular density.</li><li><strong>Category C:</strong> Heterogeneously dense tissue, which may obscure small masses.</li><li><strong>Category D:</strong> Extremely dense tissue, which substantially lowers the sensitivity of mammography.</li></ul><h2>The Masking Effect & Intrinsic Risk</h2><p>Dense tissue presents a dual clinical consideration. First, both dense glandular tissue and tumors appear white on a traditional mammogram, creating a "masking effect" similar to looking for a snowman in a blizzard. Second, higher density is an independent risk factor for breast cancer development.</p><h2>When Supplemental Screening Is Recommended</h2><p>If your report indicates Category C or D density, discuss secondary imaging with your physician. Automated breast ultrasound (ABUS) or breast MRI can dramatically increase early detection rates for occult lesions.</p>',
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80',
+  'Digital mammography workstation with diagnostic imaging',
+  (select id from public.categories where slug = 'oncology'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  true,
+  7,
+  'Dense Breast Tissue & Cancer Risk: Mammogram Guide',
+  'A clinical guide to BI-RADS breast density categories and secondary screening options.',
+  now() - interval '3 days'
+),
+(
+  'High Blood Pressure: The Silent Strain on Vascular Health',
+  'high-blood-pressure-vascular-health',
+  'Why hypertension rarely has symptoms until damage occurs, and the evidence-based daily interventions that safeguard your heart and brain.',
+  '<h2>Why Hypertension Is Called the Silent Killer</h2><p>High blood pressure quietly damages arterial walls without causing pain, dizziness, or noticeable fatigue in its early stages. Over decades, this elevated hemodynamic load accelerates atherosclerosis, increases heart failure risk, and remains the single leading preventable cause of stroke worldwide.</p><h2>Numbers You Need to Know (ACC/AHA Guidelines)</h2><ul><li><strong>Normal:</strong> Systolic under 120 mmHg and diastolic under 80 mmHg</li><li><strong>Elevated:</strong> Systolic 120-129 mmHg and diastolic under 80 mmHg</li><li><strong>Stage 1 Hypertension:</strong> Systolic 130-139 mmHg or diastolic 80-89 mmHg</li><li><strong>Stage 2 Hypertension:</strong> Systolic 140 mmHg or higher, or diastolic 90 mmHg or higher</li></ul><h2>Evidence-Based Interventions</h2><p>Dietary sodium moderation (under 2,000 mg/day), regular aerobic exercise (150 minutes weekly of brisk walking or cycling), potassium-rich whole foods, and limiting alcohol intake each contribute a 4 to 8 mmHg drop in systolic pressure.</p>',
+  'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80',
+  'Stethoscope and blood pressure cuff on a consultation desk',
+  (select id from public.categories where slug = 'hypertension'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  true,
+  5,
+  'High Blood Pressure & Vascular Health — Medical Insights',
+  'Clinical guide to blood pressure thresholds, silent risks, and evidence-based lifestyle changes.',
+  now() - interval '4 days'
+),
+(
+  'Sodium, Potassium, and Arterial Stiffness: The Science of Dietary Electrolytes',
+  'salt-sodium-potassium-blood-pressure-balance',
+  'Why cutting salt is only half the battle. How increasing dietary potassium promotes vascular relaxation and lowers stroke risk.',
+  '<h2>The Sodium-Potassium Ratio</h2><p>Most nutritional conversations focus almost exclusively on sodium restriction. However, clinical nephrology and cardiology data demonstrate that the ratio of dietary potassium to sodium is often a far stronger predictor of cardiovascular endpoints than sodium intake alone.</p><h2>How Potassium Protects Endothelial Function</h2><p>Potassium promotes natriuresis (urinary excretion of excess sodium) through the renal tubules and directly stimulates nitric oxide release in vascular endothelial cells, causing arterial smooth muscle dilation and decreased systemic vascular resistance.</p><h2>High-Yield Food Sources</h2><p>Rather than relying on supplements (which carry hyperkalemia risks, especially in patients taking ACE inhibitors or ARBs), focus on whole food sources: cooked lentils, spinach, baked potatoes with skin, avocados, salmon, and unsweetened plain yogurt.</p>',
+  'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80',
+  'Fresh potassium-rich vegetables and fruits on kitchen table',
+  (select id from public.categories where slug = 'hypertension'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  false,
+  5,
+  'Sodium vs Potassium Balance in Hypertension',
+  'Discover the physiological relationship between sodium, potassium, and blood vessel elasticity.',
+  now() - interval '6 days'
+),
+(
+  'Type 2 Diabetes: Demystifying Insulin Resistance and HbA1c',
+  'type-2-diabetes-insulin-resistance-hba1c',
+  'How cellular insulin resistance develops, why HbA1c is the gold standard diagnostic metric, and sustainable strategies for metabolic control.',
+  '<h2>The Mechanism of Insulin Resistance</h2><p>In Type 2 Diabetes, the pancreas produces insulin, but muscle, adipose, and hepatic tissues fail to respond adequately. In response, pancreatic beta-cells produce compensatory hyperinsulinemia until exhaustion sets in and glycemic dysregulation manifests.</p><h2>Interpreting Your HbA1c</h2><p>While fingerstick glucometers measure blood glucose at an isolated moment, glycated hemoglobin (HbA1c) quantifies the percentage of hemoglobin molecules bound to glucose, reflecting the average ambient glucose concentration over the prior 90-120 days:</p><ul><li><strong>Normal:</strong> Below 5.7%</li><li><strong>Prediabetes:</strong> 5.7% to 6.4%</li><li><strong>Diabetes:</strong> 6.5% or higher on two separate occasions</li></ul><h2>Multifactorial Management</h2><p>Effective management pairs pharmacological agents (such as metformin, GLP-1 receptor agonists, or SGLT2 inhibitors) with progressive resistance training, dietary fiber optimization, and continuous glucose monitoring where indicated.</p>',
+  'https://images.unsplash.com/photo-1584362917165-526a968579e8?auto=format&fit=crop&w=1200&q=80',
+  'Glucometer test kit and healthy lifestyle preparation',
+  (select id from public.categories where slug = 'diabetes'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  true,
+  7,
+  'Type 2 Diabetes & HbA1c Explained',
+  'Understanding how insulin resistance works and why HbA1c is crucial for long-term health monitoring.',
+  now() - interval '7 days'
+),
+(
+  'Reversing Prediabetes: The First 6 Months of Intervention',
+  'prediabetes-reversal-metabolic-health',
+  'Prediabetes is not an inevitability. How a 7% reduction in body weight and 150 minutes of weekly activity cut diabetes progression by 58%.',
+  '<h2>The Window of Opportunity</h2><p>Prediabetes is an active state of impaired glucose tolerance, but unlike established long-standing diabetes with significant beta-cell depletion, the pathophysiology is highly reversible during the earliest stages.</p><h2>Lessons from the Diabetes Prevention Program (DPP)</h2><p>The landmark Diabetes Prevention Program trial demonstrated that structured lifestyle modification reduced the incidence of Type 2 Diabetes by 58% over 3 years—outperforming standard metformin monotherapy (31% reduction).</p><h2>The Core 3 Pillars</h2><ol><li><strong>Skeletal Muscle Glucose Sinks:</strong> Muscle contractions during resistance exercises stimulate GLUT4 glucose transporter translocation independent of insulin.</li><li><strong>Satiety & Fiber Density:</strong> Aim for 30-35 grams of viscous soluble fiber daily to slow gastric emptying and blunt postprandial glycemic spikes.</li><li><strong>Circadian Alignment:</strong> Consuming the bulk of carbohydrate intake earlier in the day when insulin sensitivity is biologically highest.</li></ol>',
+  'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80',
+  'Nutritious balanced meal supporting glycemic stability',
+  (select id from public.categories where slug = 'diabetes'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  false,
+  6,
+  'Reversing Prediabetes: Clinical Lifestyle Protocol',
+  'Evidence-based protocol for restoring insulin sensitivity and normalizing HbA1c.',
+  now() - interval '9 days'
+),
+(
+  'Colorectal Cancer Screening: Colonoscopy vs. Stool-Based DNA Tests',
+  'colorectal-cancer-screening-colonoscopy-cologuard',
+  'Comparing colonoscopy, FIT tests, and stool DNA screening: accuracy, preparation requirements, intervals, and finding the right choice for you.',
+  '<h2>Why Colorectal Cancer Is Uniquely Preventable</h2><p>Most colorectal cancers originate from benign adenomatous polyps over a typical timeframe of 7 to 15 years. This slow progression gives secondary prevention an exceptional advantage: if polyps are identified and excised before acquiring malignant mutations, cancer never develops.</p><h2>The Screening Options Compared</h2><ul><li><strong>Colonoscopy (Every 10 years):</strong> The diagnostic gold standard. Allows direct visual inspection of the entire colon and immediate therapeutic polypectomy during the same session.</li><li><strong>Fecal Immunochemical Test / FIT (Annual):</strong> Uses antibodies to detect microscopic occult human hemoglobin in stool. Non-invasive, no bowel prep, but requires strict annual adherence.</li><li><strong>Stool DNA-FIT Test (Every 3 years):</strong> Combines hemoglobin detection with molecular biomarkers for mutated human DNA shed by neoplastic lesions. Higher sensitivity for adenomas than FIT alone, but with slightly higher false-positive rates.</li></ul><h2>When Colonoscopy Remains Non-Negotiable</h2><p>If you have personal or familial history of polyps or colorectal malignancy, inflammatory bowel disease, or any positive non-invasive test result, colonoscopy is the only indicated pathway.</p>',
+  'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1200&q=80',
+  'Endoscopy lab equipment and diagnostic suite',
+  (select id from public.categories where slug = 'screening'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  true,
+  8,
+  'Colonoscopy vs Stool DNA Screening Compared',
+  'Clear clinical comparison of colonoscopy, FIT, and Cologuard screening modalities.',
+  now() - interval '11 days'
+),
+(
+  'Early Screening: When and Why Preventative Cancer Tests Matter',
+  'early-screening-preventative-tests',
+  'From mammograms to low-dose lung CT, how guideline-directed screening catches disease long before clinical symptoms appear.',
+  '<h2>The Science of Secondary Prevention</h2><p>Screening identifies precancerous lesions or early-stage malignancies in asymptomatic individuals. By detecting microscopic cellular changes before symptoms arise, clinical interventions are far less invasive and overall survival rates are dramatically higher.</p><h2>Essential Evidence-Based Milestones</h2><ul><li><strong>Cervical Cytology & HPV:</strong> Routine screening every 3 to 5 years starting at age 21 to 29.</li><li><strong>Breast Mammography:</strong> Biennial screening starting at age 40 for average-risk individuals.</li><li><strong>Colorectal Screening:</strong> Initiation at age 45 for all average-risk adults.</li><li><strong>Low-Dose Chest CT:</strong> Annual screening for adults aged 50-80 with a 20 pack-year smoking history who currently smoke or quit within 15 years.</li></ul>',
+  'https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&w=1200&q=80',
+  'Doctor discussing diagnostic screening milestones with patient',
+  (select id from public.categories where slug = 'screening'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  false,
+  6,
+  'Cancer Screening Guidelines and Timelines',
+  'Guidelines for mammography, colonoscopy, and cervical screening based on clinical evidence.',
+  now() - interval '13 days'
+),
+(
+  'Asthma Management: Controller vs. Reliever Inhalers',
+  'asthma-management-inhalers',
+  'Confused by your inhaler regimen? Understand the distinct mechanisms of maintenance anti-inflammatory steroids and rapid bronchodilators.',
+  '<h2>Two Different Goals, Two Distinct Pharmacologies</h2><p>One of the most widespread causes of poor asthma control and preventable emergency visits is over-reliance on reliever inhalers (such as albuterol) while under-utilizing daily anti-inflammatory controller medications (inhaled corticosteroids).</p><h2>The Maintenance Controller (Steroid / LABA)</h2><p>Inhaled corticosteroids (ICS) suppress eosinophilic and lymphocytic infiltration into bronchial mucosa, decreasing airway edema, mucus hypersecretion, and airway remodeling. They must be taken consistently every single day regardless of how well you feel.</p><h2>The Quick-Relief Bronchodilator</h2><p>Short-acting beta2-agonists (SABA) relax contracted airway smooth muscle within minutes. However, they do nothing to treat the underlying swelling. The Rule of Twos applies: needing a reliever more than twice weekly during daytime or waking at night twice monthly signifies inadequate baseline control.</p>',
+  'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80',
+  'Inhaler and pulmonary health notes',
+  (select id from public.categories where slug = 'asthma'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  false,
+  5,
+  'Asthma Inhaler Types: Controllers vs Relievers',
+  'Clarifying the difference between anti-inflammatory maintenance inhalers and quick-relief bronchodilators.',
+  now() - interval '15 days'
+),
+(
+  'Adult-Onset Asthma: Recognizing Environmental Triggers and Occupational Risks',
+  'adult-onset-asthma-triggers-and-allergies',
+  'Developing respiratory symptoms after age 30? How late-onset asthma differs from pediatric forms and steps for diagnosis.',
+  '<h2>How Adult-Onset Asthma Differs</h2><p>While childhood asthma is predominantly atopic (allergic) and often remits during adolescence, adult-onset asthma tends to be non-atopic, more persistent, and typically features a steeper decline in pulmonary function if left untreated.</p><h2>Frequent Misdiagnoses</h2><p>Adult patients presenting with unexplained cough or nocturnal dyspnea are frequently misdiagnosed with recurrent bronchitis, post-nasal drip, or acid reflux for months before spirometry confirms bronchial hyperresponsiveness.</p><h2>Diagnostic Workup</h2><p>Diagnosis requires pre- and post-bronchodilator spirometry demonstrating reversible airflow limitation (an increase in FEV1 of >12% and >200 mL). Fractional exhaled nitric oxide (FeNO) testing can further characterize eosinophilic airway inflammation.</p>',
+  'https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=1200&q=80',
+  'Pulmonologist reviewing spirometry curves and lung volume tests',
+  (select id from public.categories where slug = 'asthma'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  false,
+  6,
+  'Adult-Onset Asthma: Diagnosis & Symptoms',
+  'Clinical guide to diagnosing asthma in adults, pulmonary function testing, and trigger identification.',
+  now() - interval '17 days'
+),
+(
+  'The Mediterranean Diet: What Randomized Clinical Trials Actually Show',
+  'mediterranean-diet-cardiovascular-prevention',
+  'Looking past social media trends to the landmark PREDIMED trial data on heart disease, cognitive preservation, and longevity.',
+  '<h2>Beyond the Buzzword</h2><p>The Mediterranean dietary pattern is among the most intensely investigated nutritional frameworks in preventive cardiology. Unlike short-lived commercial fad diets, its cardiovascular benefits are backed by rigorous prospective randomized controlled trials.</p><h2>The Landmark PREDIMED Data</h2><p>In the landmark PREDIMED trial involving 7,447 high-cardiovascular-risk participants, allocation to a Mediterranean diet supplemented with either extra virgin olive oil or mixed nuts resulted in a 30% relative risk reduction for major adverse cardiovascular events (myocardial infarction, stroke, or cardiovascular death).</p><h2>The Core Biochemical Mechanisms</h2><ul><li><strong>Polyphenol-Rich Monounsaturated Fats:</strong> Extra virgin olive oil reduces LDL oxidation and improves endothelial vasodilation.</li><li><strong>Fiber-Driven Short-Chain Fatty Acids:</strong> High legume and whole grain intake nourishes gut microbiota, producing butyrate and propionate that lower systemic inflammation.</li><li><strong>Anti-Thrombotic Omega-3s:</strong> Fatty fish consumption reduces platelet aggregation and serum triglycerides.</li></ul>',
+  'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80',
+  'Extra virgin olive oil, nuts, and fresh Mediterranean produce',
+  (select id from public.categories where slug = 'prevention'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  true,
+  7,
+  'Mediterranean Diet: The Clinical Evidence',
+  'Examining the randomized trial evidence behind Mediterranean nutrition for heart and brain protection.',
+  now() - interval '19 days'
+),
+(
+  'Physical Activity in Cancer Survivorship: Reducing Recurrence and Fatigue',
+  'exercise-as-medicine-cancer-survivorship',
+  'How structured cardiovascular and resistance exercise lowers cancer recurrence rates, combats treatment-related fatigue, and preserves bone mineral density.',
+  '<h2>Exercise as an Adjuvant Oncology Intervention</h2><p>For decades, cancer patients undergoing active therapy were advised to rest and minimize exertion. Modern clinical oncology guidelines from ASCO and ACSM now recommend exactly the opposite: structured exercise should be prescribed as an integral component of cancer therapy.</p><h2>The Biological Rationale</h2><p>Regular physical exercise modulates circulating insulin-like growth factor 1 (IGF-1), suppresses inflammatory cytokines (such as IL-6 and TNF-alpha), improves immune surveillance by mobilizing natural killer (NK) cells, and mitigates treatment-induced sarcopenia.</p><h2>Safe Exercise Prescriptions</h2><p>Begin with progressive aerobic sessions (e.g. 20-30 minutes of stationary cycling or walking at moderate intensity) paired with low-load resistance exercises twice weekly, tailored to personal surgical and hematologic thresholds.</p>',
+  'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80',
+  'Individual walking outdoors during morning rehabilitation exercise',
+  (select id from public.categories where slug = 'prevention'),
+  'Dr. Sarah Lin, MD',
+  'published',
+  false,
+  6,
+  'Exercise in Cancer Survivorship: Clinical Evidence',
+  'Why oncology guidelines recommend progressive exercise to combat cancer-related fatigue and recurrence.',
+  now() - interval '21 days'
+)
+on conflict (slug) do update set
+  title = excluded.title,
+  summary = excluded.summary,
+  body = excluded.body,
+  cover_url = excluded.cover_url,
+  cover_alt = excluded.cover_alt,
+  category_id = excluded.category_id,
+  author_name = excluded.author_name,
+  status = excluded.status,
+  is_featured = excluded.is_featured,
+  reading_minutes = excluded.reading_minutes,
+  seo_title = excluded.seo_title,
+  seo_description = excluded.seo_description,
+  published_at = excluded.published_at;
+
+-- 2. Insert Sample Scientific References & Citations
+insert into public.article_references (article_id, citation, url, sort_order)
+select a.id, r.citation, r.url, r.sort_order
+from public.articles a
+cross join (values
+  ('understanding-cancer-stages', 'Amin MB, et al. The Eighth Edition AJCC Cancer Staging Manual: Continuing to build a bridge from a population-based to a more "personalized" approach to cancer staging. CA Cancer J Clin. 2017.', 'https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21388', 1),
+  ('breast-cancer-risk-factors-dense-breasts', 'Kolb TM, et al. Comparison of the performance of screening mammography, physical examination, and breast US and evaluation of factors that influence them: an analysis of 27,825 patient evaluations. Radiology. 2002.', 'https://pubmed.ncbi.nlm.nih.gov/12355008/', 1),
+  ('high-blood-pressure-vascular-health', 'Whelton PK, et al. 2017 ACC/AHA/AAPA/ABC/ACPM/AGS/APhA/ASH/ASPC/NMA/PCNA Guideline for the Prevention, Detection, Evaluation, and Management of High Blood Pressure in Adults. J Am Coll Cardiol. 2018.', 'https://www.jacc.org/doi/10.1016/j.jacc.2017.11.006', 1),
+  ('colorectal-cancer-screening-colonoscopy-cologuard', 'US Preventive Services Task Force. Screening for Colorectal Cancer: US Preventive Services Task Force Recommendation Statement. JAMA. 2021;325(19):1965–1977.', 'https://jamanetwork.com/journals/jama/fullarticle/2779985', 1),
+  ('mediterranean-diet-cardiovascular-prevention', 'Estruch R, et al. Primary Prevention of Cardiovascular Disease with a Mediterranean Diet Supplemented with Extra-Virgin Olive Oil or Nuts. N Engl J Med. 2018;378:e34.', 'https://www.nejm.org/doi/full/10.1056/NEJMoa1800389', 1)
+) as r(slug, citation, url, sort_order)
+where a.slug = r.slug
+on conflict do nothing;

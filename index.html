@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Medical Insights — Better Health Begins with Better Understanding</title>
+  <meta name="description"
+    content="Evidence-based education on cancer, diabetes, hypertension, asthma and disease prevention, written by a medical doctor.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Instrument+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+  <main id="main">
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <h1>Better Health Begins with Better Understanding.</h1>
+          <p class="lede">Clear, carefully sourced guidance on cancer and the everyday conditions that shape long-term
+            health, written by a practising doctor.</p>
+          <form class="search" id="hero-search" role="search">
+            <label for="q" class="skip" style="position:absolute">Search articles</label>
+            <input id="q" name="q" type="search" placeholder="Search articles, e.g. blood pressure" autocomplete="off">
+            <button class="btn" type="submit">Search</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" style="padding-top:40px">
+      <div class="section-head">
+        <h2>Featured</h2><a class="link" href="articles.html">All articles</a>
+      </div>
+      <div class="grid" id="featured">
+        <div class="state">Loading…</div>
+      </div>
+    </section>
+
+    <section class="section wrap" style="padding-top:0">
+      <div class="section-head">
+        <h2>Browse by topic</h2>
+      </div>
+      <div class="cats" id="cat-cards"></div>
+    </section>
+
+    <section class="section wrap" style="padding-top:0">
+      <div class="section-head">
+        <h2>Latest articles</h2><a class="link" href="articles.html">View library</a>
+      </div>
+      <div class="grid" id="latest">
+        <div class="state">Loading…</div>
+      </div>
+    </section>
+
+    <section class="section spotlight">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>Oncology spotlight</h2>
+            <p class="lede" style="margin-top:12px">From risk and screening to treatment questions, explained without
+              jargon.</p>
+          </div>
+          <a class="link" href="category.html?c=oncology">More on cancer</a>
+        </div>
+        <div class="grid" id="onco">
+          <div class="state">Loading…</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <div class="section-head">
+        <h2>Living well with long-term conditions</h2>
+      </div>
+      <div class="ncd">
+        <div>
+          <h3>Diabetes</h3>
+          <p>How blood sugar works, what monitoring means, and how daily habits change outcomes.</p>
+        </div>
+        <div>
+          <h3>Hypertension</h3>
+          <p>Why high blood pressure is often silent, and what keeps it under control.</p>
+        </div>
+        <div>
+          <h3>Asthma</h3>
+          <p>Triggers, inhaler use, and recognising when symptoms need attention.</p>
+        </div>
+        <div>
+          <h3>Prevention</h3>
+          <p>Screening, nutrition, activity and the choices that lower risk across many diseases.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="background:var(--paper-2)">
+      <div class="wrap about-prev">
+        <div class="portrait" id="portrait" role="img" aria-label="Portrait of the author"></div>
+        <div>
+          <h2>About the author</h2>
+          <p class="lede" style="margin:16px 0 28px" id="bio-short"></p>
+          <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+            <a class="btn" href="assets/cv.pdf" download="Dr-Kaleab-CV.pdf" id="download-cv-btn">
+              <i data-lucide="download" class="i"></i> Read Full Profile (Download CV)
+            </a>
+            <a class="btn ghost" href="about.html">About & Clinical Mission</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+
+</html>

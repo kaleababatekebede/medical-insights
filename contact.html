@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contact & Inquiries — Medical Insights</title>
+  <meta name="description"
+    content="Get in touch for educational questions, academic inquiries, or corrections. Not for medical emergencies.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Instrument+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js" defer></script>
+</head>
+
+<body>
+  <main id="main">
+    <header class="page-head">
+      <div class="wrap">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="index.html">Home</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">Contact</span>
+        </nav>
+        <h1>Contact & Inquiries</h1>
+        <p class="lede">
+          Have a question about an article, a suggestion for a clinical topic, or an academic speaking request? Reach out below.
+        </p>
+      </div>
+    </header>
+
+    <div class="wrap" style="padding-top:48px; padding-bottom:88px;">
+      <!-- Urgent Medical Emergency Banner -->
+      <div class="notice notice-warning" role="alert">
+        <i data-lucide="alert-triangle" class="i" style="font-size:1.4rem; color:#B45309;" aria-hidden="true"></i>
+        <div>
+          <strong>Important Clinical Notice:</strong> This contact form is strictly for general educational feedback and editorial inquiries. It is <em>not monitored for clinical emergencies</em> and cannot provide individualized diagnosis, triage, or prescriptions. If you have an acute health concern, please contact emergency medical services (such as 911 or local emergency services) or consult your personal physician immediately.
+        </div>
+      </div>
+
+      <div class="contact-grid" style="margin-top:36px;">
+        <!-- Contact Form Card -->
+        <section class="form-card">
+          <h2 style="font-size:1.8rem; margin-bottom:8px;">Send a Message</h2>
+          <p style="color:var(--muted); margin-bottom:28px;">We review all thoughtful messages and respond to academic and editorial inquiries.</p>
+
+          <div id="form-status" style="display:none;"></div>
+
+          <form id="contact-form">
+            <div class="form-group">
+              <label for="contact-name">Full Name <span aria-hidden="true" style="color:#DC2626;">*</span></label>
+              <input class="form-control" type="text" id="contact-name" name="name" required maxlength="120" placeholder="e.g. Dr. Jane Smith or Alex Johnson">
+            </div>
+
+            <div class="form-group">
+              <label for="contact-email">Email Address <span aria-hidden="true" style="color:#DC2626;">*</span></label>
+              <input class="form-control" type="email" id="contact-email" name="email" required placeholder="you@example.com">
+            </div>
+
+            <div class="form-group">
+              <label for="contact-message">Message <span aria-hidden="true" style="color:#DC2626;">*</span></label>
+              <textarea class="form-control" id="contact-message" name="message" required minlength="5" maxlength="4000" placeholder="Share your question, feedback on an article, or inquiry..."></textarea>
+            </div>
+
+            <button class="btn" id="submit-btn" type="submit" style="width:100%; justify-content:center;">
+              <i data-lucide="send" class="i" aria-hidden="true"></i>
+              <span>Send Message</span>
+            </button>
+          </form>
+        </section>
+
+        <!-- Sidebar / Guidelines -->
+        <aside class="contact-sidebar">
+          <div class="info-card">
+            <h3><i data-lucide="help-circle" class="i" style="color:var(--teal-700)"></i> Topics Welcomed</h3>
+            <ul style="padding-left:20px; color:var(--muted); display:grid; gap:8px; font-size:0.95rem; margin-top:12px;">
+              <li>Suggested topics for future deep dives</li>
+              <li>Feedback or citations for published articles</li>
+              <li>Academic, lecture, or medical writing inquiries</li>
+              <li>Collaborations with verified health non-profits</li>
+            </ul>
+          </div>
+
+          <div class="info-card">
+            <h3><i data-lucide="clock" class="i" style="color:var(--teal-700)"></i> Expected Response</h3>
+            <p style="color:var(--muted); font-size:0.95rem; margin-top:8px;">
+              Because clinical duties take precedence, non-urgent inquiries are typically reviewed within 3 to 5 business days.
+            </p>
+          </div>
+
+          <div class="info-card">
+            <h3><i data-lucide="shield" class="i" style="color:var(--teal-700)"></i> Privacy & Security</h3>
+            <p style="color:var(--muted); font-size:0.95rem; margin-top:8px;">
+              Your email is kept strictly confidential and will never be shared or used for marketing. Do not include sensitive protected health information (PHI).
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase, renderChrome, configured, esc } from './main.js';
+
+    const form = document.getElementById('contact-form');
+    const statusBox = document.getElementById('form-status');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      if (!configured) {
+        showStatus('error', 'Supabase credentials are not configured yet.');
+        return;
+      }
+
+      const name = document.getElementById('contact-name').value.trim();
+      const email = document.getElementById('contact-email').value.trim();
+      const message = document.getElementById('contact-message').value.trim();
+
+      if (!name || !email || !message) {
+        showStatus('error', 'Please fill in all required fields.');
+        return;
+      }
+
+      // UI loading state
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Sending message…</span>`;
+
+      try {
+        const { error } = await supabase.from('messages').insert([{ name, email, message }]);
+
+        if (error) throw error;
+
+        showStatus('success', 'Thank you! Your message has been received securely.');
+        form.reset();
+      } catch (err) {
+        console.error(err);
+        showStatus('error', 'Unable to send your message right now. Please check your network and try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i data-lucide="send" class="i" aria-hidden="true"></i><span>Send Message</span>`;
+        window.lucide?.createIcons();
+      }
+    });
+
+    function showStatus(type, msg) {
+      statusBox.style.display = 'block';
+      statusBox.className = type === 'success' ? 'notice notice-success' : 'notice notice-error';
+      statusBox.innerHTML = `
+        <i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="i" aria-hidden="true"></i>
+        <span>${esc(msg)}</span>
+      `;
+      window.lucide?.createIcons();
+    }
+  </script>
+</body>
+
+</html>
